@@ -275,7 +275,7 @@ def main(argv):
         exit(0)
 
     if args.rmcloud:
-        quads._remove_cloud(args.rmcloud)
+        quads.remove_cloud(args.rmcloud)
         exit(0)
 
     if args.hostresource:
