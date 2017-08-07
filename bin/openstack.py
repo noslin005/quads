@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/python
 import sys
 import json
 import pprint
@@ -44,10 +44,10 @@ compute_priority['6018r'] = cfg.CONF.control.priority_6018r
 
 # TODO(sai): these values for total node count should be passed to the script
 inventory = {}
-inventory['r930'] = 2
+inventory['r930'] = 3
 inventory['r730'] = 0
 inventory['r630'] = 2
-inventory['r620'] = 8
+inventory['r620'] = 4
 inventory['6048r'] = 0
 inventory['6018r'] = 0
 
@@ -85,13 +85,13 @@ def schedule_nodes(count, priority, role=None):
     # need to check if a minimum of 3 nodes if that node type is to be scheduled
     # as controllers
     role_minimum = 2 if role == 'control' else 0
-    for i in range(0, count):
-        # keys in invetory dictionary and priority dictionary should be same
-        for type, weight in filter:
-            if inventory[type] > role_minimum:
+    for type, weight in filter:
+        if inventory[type] > role_minimum:
+            # keys in inventory dictionary and priority dictionary should be same
+            for i in range(0, count):
                 systems[type] = systems.get(type, 0) + 1
                 inventory[type] -= 1
-                break
+            break
     return systems
 
 
@@ -125,7 +125,7 @@ def tag_instack(instack_data, nodes, role, quads, instack_file):
     dump_json(instack_data, instack_file)
 
 def dump_json(instack_data, instack_file):
-    with open(instack_file, 'w') as instack:
+    with open('sai.json', 'w') as instack:
         json.dump(instack_data, instack, indent=4)
 
 def render(tpl_path, context):
@@ -173,7 +173,9 @@ def query_openstack_config(quads, cloud_name, property):
 
 
 def main():
-    cfg.CONF(default_config_files=['openstack.conf'])
+    # TODO(sai): Make this relative to QUADS install location
+    config_file = os.path.dirname(__file__) + '/../conf/openstack.conf'
+    cfg.CONF(default_config_files=[config_file])
     quads = initialize_quads_object()
     # TODO(sai): uncomment below lines to dynamically get inventory for the
     # cloud as we currently hardcoded inventory for testing purposes
@@ -191,56 +193,66 @@ def main():
     if not os.path.isfile(cfg.CONF.instackenv):
         sys.exit(1)
     if not os.path.isdir(cfg.CONF.templates):
-        sys/.exit(1)
+        sys.exit(1)
     controller_count = query_openstack_config(quads, cfg.CONF.cloud,
                                               'controllers')
     compute_count = query_openstack_config(quads, cfg.CONF.cloud, 'computes')
     ceph_count = query_openstack_config(quads, cfg.CONF.cloud, 'ceph')
+    # Schedule in the order of controller, ceph and compute
     controller_nodes = schedule_nodes(controller_count, controller_priority, 'control')
-    ceph_nodes = schedule_nodes(3, ceph_priority)
+    ceph_nodes = schedule_nodes(2, ceph_priority)
+    compute_nodes = schedule_nodes(3, compute_priority)
     try:
         instack_data = load_json(cfg.CONF.instackenv)
     except IOError:
         print("File {} doesn't exist").format(cfg.CONF.instackenv)
         sys.exit(1)
-
-    tag_instack(instack_data, controller_nodes, 'control', quads)
+    tag_instack(instack_data, controller_nodes, 'control', quads, cfg.CONF.instackenv)
     try:
-        instack_data = load_json(cfg.CONF.instackenv)
+        instack_data = load_json('sai.json')
     except IOError:
         print("File {} doesn't exist").format(cfg.CONF.instackenv)
         sys.exit(1)
-    tag_instack(instack_data, compute_nodes, 'compute', quads)
+    tag_instack(instack_data, compute_nodes, 'compute', quads, cfg.CONF.instackenv)
     try:
-        instack_data = load_json(cfg.CONF.instackenv)
+        instack_data = load_json('sai.json')
     except IOError:
         print("File {} doesn't exist").format(cfg.CONF.instackenv)
         sys.exit(1)
-    tag_instack(instack_data, ceph_nodes, 'ceph', quads)
+    tag_instack(instack_data, ceph_nodes, 'ceph', quads, cfg.CONF.instackenv)
+    for type, count in controller_nodes.iteritems():
+        controller_type = type
+    controller = {'type': controller_type}
     deploy = {'controller_count': composable_role['control'],
               'r930compute_count': composable_role['r930compute'],
               'r730compute_count': composable_role['r730compute'],
               'r630compute_count': composable_role['r630compute'],
               'r620compute_count': composable_role['r620compute'],
-              '6048rcompute_count': composable_role['6048rcompute'],
-              '6018rcompute_count': composable_role['6018rcompute'],
+              'r6048compute_count': composable_role['6048rcompute'],
+              'r6018compute_count': composable_role['6018rcompute'],
               'r930ceph_count': composable_role['r930ceph'],
-              'r730ceph_count': composable_role['r730ceph''],
+              'r730ceph_count': composable_role['r730ceph'],
               'r630ceph_count': composable_role['r630ceph'],
               'r620ceph_count': composable_role['r620ceph'],
-              '6048rceph_count': composable_role['6048rceph'],
-              '6018rceph_count': composable_role['6018rceph'],
+              'r6048ceph_count': composable_role['6048rceph'],
+              'r6018ceph_count': composable_role['6018rceph']
               }
+    deploy_template = os.path.join(cfg.CONF.templates, 'deploy.yaml.j2')
+    overcloud_script_template = os.path.join(cfg.CONF.templates, 'overcloud_deploy.sh.j2')
     deploy_file = os.path.join(cfg.CONF.templates, 'deploy.yaml')
-    overcloud_script = os.path.join(cfg.CONF.templates, 'overcloud_script.sh')
+    overcloud_script_file = os.path.join(cfg.CONF.templates, 'overcloud_deploy.sh')
+    network_environment_template = os.path.join(cfg.CONF.templates, 'network-environment.yaml.j2')
+    network_environment_file = os.path.join(cfg.CONF.templates, 'network-environment.yaml')
     with open(deploy_file, 'w') as f:
-        result = render(deploy_file, deploy)
+        result = render(deploy_template, deploy)
+        f.write(result)
+    with open(network_environment_file, 'w') as f:
+        result = render(network_environment_template, controller)
         f.write(result)
     context = {'version': version}
-    with open(overcloud_script, 'w') as f:
-        result = render(overcloud_script, context)
+    with open(overcloud_script_file, 'w') as f:
+        result = render(overcloud_script_template, context)
         f.write(result)
-
 if __name__ == '__main__':
     sys.exit(main())
 

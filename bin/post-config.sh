@@ -104,12 +104,12 @@ for env in $($quads --summary --post-config $1 ; do
             if [ -f $data_dir/postconfig/${env}-${owner}-${ticket}-${1}-start ] && [ ! -f {env}-${owner}-${ticket}-${1}-success ]; then
                 touch $data_dir/postconfig/${env}-${owner}-${ticket}-${1}-start
                 # Clone OpenStack Templates
-                cloud_specific_templates=${openstack_templates_dir}/${env}-${owner}-${ticket}
-                if [ ! -d $cloud_specific_templates ]; then
-                    mkdir $cloud_specific_templates
+                cloud_specific_templates=${openstack_templates_dir}/${env}-${owner}-${ticket}/automated-openstack-templates
+                if [ ! -d ${cloud_specific_templates} ]; then
+                    mkdir ${cloud_specific_templates}
                 fi
                 git clone  https://github.com/smalleni/automated-openstack-templates  $cloud_specific_templates
-                apply_post_config $env $json_web_path/${env}_instackenv.json $cloud_specific_templates/automated-openstack-templates
+                apply_post_config $env $json_web_path/${env}_instackenv.json $cloud_specific_templates
             fi
         fi
     fi
