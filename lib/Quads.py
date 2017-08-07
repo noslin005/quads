@@ -395,8 +395,9 @@ class Quads(object):
 
     # update a cloud resource
     def update_cloud(self, cloudresource, description, forceupdate, cloudowner,
-                     ccusers, cloudticket, qinq, postconfig, version, puddle,
-                     controlscale, computescale, storagescale):
+                     ccusers, cloudticket, qinq, postconfig=None, version=None,
+                     build=None, controlscale=None, computescale=None,
+                     storagescale=None):
         # define or update a cloud resource
         if description is None:
             self.logger.error("--description is required when using --define-cloud")
@@ -426,7 +427,7 @@ class Quads(object):
                         else:
                             service_description = {'name': 'openstack',
                                                    'version': version,
-                                                   'puddle': puddle,
+                                                   'build': build,
                                                    'controllers': controlscale,
                                                    'computes': computescale,
                                                    'ceph': storagescale

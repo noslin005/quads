@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/python
 
 import argparse
 import datetime
@@ -175,7 +175,7 @@ def main(argv):
     parser.add_argument('--log-path', dest='logpath',type=str,default=None, help='Path to quads log file')
     parser.add_argument('--post-config', dest='postconfig',type=str, default=None, nargs='*', choices= ['openstack'], help='Post provisioning configuration to apply')
     parser.add_argument('--version', dest='version',type=str,default=None, help='Version of Software to apply')
-    parser.add_argument('--puddle', dest='puddle',type=str,default='latest', help='Puddle to apply')
+    parser.add_argument('--build', dest='build',type=str, default='latest', help='Build to deploy')
     parser.add_argument('--os-control-scale', dest='controlscale',type=int,default=None, help='Number of controller nodes for OpenStack deployment')
     parser.add_argument('--os-compute-scale', dest='computescale',type=int,default=None, help='Number of compute nodes for OpenStack deployment')
     parser.add_argument('--os-ceph-scale', dest='cephscale',type=int,default=None, help='Number of ceph nodes for OpenStack deployment')
