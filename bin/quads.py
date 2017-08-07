@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 
 import argparse
 import datetime
@@ -275,7 +275,7 @@ def main(argv):
         exit(0)
 
     if args.rmcloud:
-        quads.quads_remove_cloud(args.rmcloud)
+        quads._remove_cloud(args.rmcloud)
         exit(0)
 
     if args.hostresource:

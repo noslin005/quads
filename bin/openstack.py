@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 import sys
 import json
 import pprint
@@ -101,7 +101,7 @@ def load_json(fname):
     return instack_data
     #print instack_data['nodes']
 
-def tag_instack(instack_data, nodes, role, quads):
+def tag_instack(instack_data, nodes, role, quads, instack_file):
     for type, count in nodes.items():
         node_index = 0
         i = 0
@@ -122,11 +122,11 @@ def tag_instack(instack_data, nodes, role, quads):
                     composable_role[machine_type+role]+=1
                 node_index = node_index + 1
                 nodes[machine_type] -= 1
-    dump_json(instack_data)
+    dump_json(instack_data, instack_file)
 
-def dump_json(instack_data):
-    with open('sai.json', 'w') as instack_file:
-        json.dump(instack_data, instack_file, indent=4)
+def dump_json(instack_data, instack_file):
+    with open(instack_file, 'w') as instack:
+        json.dump(instack_data, instack, indent=4)
 
 def render(tpl_path, context):
     path, filename = os.path.split(os.path.abspath(os.path.expanduser(tpl_path)))
@@ -173,7 +173,7 @@ def query_openstack_config(quads, cloud_name, property):
 
 
 def main():
-    cfg.CONF(default_config_files=['/home/smalleni/automated-deploys/quads/bin/app.conf'])
+    cfg.CONF(default_config_files=['openstack.conf'])
     quads = initialize_quads_object()
     # TODO(sai): uncomment below lines to dynamically get inventory for the
     # cloud as we currently hardcoded inventory for testing purposes
