@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/python
 
 import argparse
 import datetime
@@ -108,9 +108,10 @@ def print_cloud_summary(quads, datearg, activesummary):
 def print_cloud_postconfig(quads, datearg, activesummary, postconfig):
     clouds = quads.query_cloud_postconfig(datearg, activesummary, postconfig)
     for cloud in clouds:
-        print cloud
+        for name in cloud:
+            print name
 
-def main():
+def main(argv):
     quads_config_file = os.path.dirname(__file__) + "/../conf/quads.yml"
     quads_config = quads_load_config(quads_config_file)
 
@@ -172,11 +173,12 @@ def main():
     parser.add_argument('--move-command', dest='movecommand', type=str, default=defaultmovecommand, help='External command to move a host')
     parser.add_argument('--dry-run', dest='dryrun', action='store_true', default=None, help='Dont update state when used with --move-hosts')
     parser.add_argument('--log-path', dest='logpath',type=str,default=None, help='Path to quads log file')
-    parser.add_argument('--post-config', dest='postconfig',type=str, default=None, nargs='*', choices=['openstack'], help='Post provisioning configuration to apply')
+    parser.add_argument('--post-config', dest='postconfig',type=str, default=None, nargs='*', choices= ['openstack'], help='Post provisioning configuration to apply')
     parser.add_argument('--version', dest='version',type=str,default=None, help='Version of Software to apply')
     parser.add_argument('--puddle', dest='puddle',type=str,default='latest', help='Puddle to apply')
     parser.add_argument('--os-control-scale', dest='controlscale',type=int,default=None, help='Number of controller nodes for OpenStack deployment')
     parser.add_argument('--os-compute-scale', dest='computescale',type=int,default=None, help='Number of compute nodes for OpenStack deployment')
+    parser.add_argument('--os-ceph-scale', dest='cephscale',type=int,default=None, help='Number of ceph nodes for OpenStack deployment')
     parser.add_argument('--host-type', dest='hosttype',type=str, default=None, help='Model/Make/Type of host DellR620  for example')
 
     args = parser.parse_args()
@@ -273,7 +275,7 @@ def main():
         exit(0)
 
     if args.rmcloud:
-        quads.remove_cloud(args.rmcloud)
+        quads.quads_remove_cloud(args.rmcloud)
         exit(0)
 
     if args.hostresource:
@@ -384,7 +386,6 @@ def main():
         else:
             print_host_cloud(quads, args.host, args.datearg)
         exit(0)
-
     if args.postconfig:
         print_cloud_postconfig(quads, args.datearg, args.summary, args.postconfig)
         exit(0)
@@ -397,4 +398,4 @@ def main():
     exit(0)
 
 if __name__ == "__main__":
-       main()
+       main(sys.argv[1:])
