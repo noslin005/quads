@@ -15,7 +15,7 @@ json_web_path=${quads["json_web_path"]}
 openstack_templates_dir=${quads["openstack_templates"]}
 openstack_templates_git=https://github.com/smalleni/automated-openstack-templates.git
 
-# trap to make sure 
+# trap to make sure sure we keep status of deployment 
 function finish {
   rm ${data_dir}/postconfig/${env}-${owner}-${ticket}-${1}-start
 }
@@ -121,7 +121,8 @@ for env in $($quads --summary --post-config $1 ; do
     if [ "$owner" != "nobody" -a "$owner" -a "$ticket" ]; then
         if [ -f $data_dir/release/${env}-${owner}-${ticket} ]; then
                 if [ ! -f
-                    ${data_dir}/postconfig/${env}-${owner}-${ticket}-${1}-start ] && [ ! -f ${data_dir}/postconfig/${env}-${owner}-${ticket}-${1}-success ]; then
+                    ${data_dir}/postconfig/${env}-${owner}-${ticket}-${1}-start ] && 
+                    [ ! -f ${data_dir}/postconfig/${env}-${owner}-${ticket}-${1}-success ]; then
                 touch ${data_dir}/postconfig/${env}-${owner}-${ticket}-${1}-start
                 # Clone OpenStack Templates
                 cloud_specific_templates=${openstack_templates_dir}/${env}-${owner}-${ticket}/automated-openstack-templates
